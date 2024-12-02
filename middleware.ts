@@ -3,13 +3,24 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
-    
-    if (!token) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url));
-    }
+    try {
+      const token = req.nextauth.token;
+      
+      if (!token) {
+        return NextResponse.redirect(new URL("/auth/signin", req.url));
+      }
 
-    return NextResponse.next();
+      // Add security headers
+      const response = NextResponse.next();
+      response.headers.set("X-Frame-Options", "DENY");
+      response.headers.set("X-Content-Type-Options", "nosniff");
+      response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+      return response;
+    } catch (error) {
+      console.error("[middleware] Error:", error);
+      return NextResponse.redirect(new URL("/auth/error", req.url));
+    }
   },
   {
     callbacks: {
