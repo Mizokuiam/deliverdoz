@@ -18,10 +18,10 @@ export default function Home() {
         </p>
         <div className="flex justify-center gap-4">
           <Button asChild size="lg">
-            <Link href="/send">Send a Document</Link>
+            <Link href="/auth/signin?callbackUrl=/send">Send a Document</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/travel">Become a Traveler</Link>
+            <Link href="/auth/signin?callbackUrl=/travel">Become a Traveler</Link>
           </Button>
         </div>
       </section>

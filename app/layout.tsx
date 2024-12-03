@@ -3,9 +3,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SessionProvider } from '@/components/auth/session-provider';
+import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
-import { Toaster } from '@/components/ui/toaster';
+import { auth } from '@/lib/auth/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,15 +15,17 @@ export const metadata: Metadata = {
   description: 'Connect with travelers to deliver your documents securely across destinations',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <SessionProvider>
+        <SessionProvider session={session}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <div className="flex min-h-screen flex-col">
               <Header />

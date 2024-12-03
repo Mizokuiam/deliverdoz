@@ -15,7 +15,8 @@ import {
 
 export default function Header() {
   const { setTheme } = useTheme();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const isLoading = status === "loading";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -28,9 +29,11 @@ export default function Header() {
           <Link href="/about" className="text-foreground/60 hover:text-foreground">
             About
           </Link>
-          <Link href="/contact" className="text-foreground/60 hover:text-foreground">
-            Contact
-          </Link>
+          {session && (
+            <Link href="/dashboard" className="text-foreground/60 hover:text-foreground">
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center space-x-4">
@@ -49,7 +52,9 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {session ? (
+          {isLoading ? (
+            <Button variant="ghost" disabled>Loading...</Button>
+          ) : session ? (
             <UserNav />
           ) : (
             <Button asChild variant="default">
