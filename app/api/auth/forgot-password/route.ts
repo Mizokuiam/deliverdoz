@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { dbOperations } from '@/lib/db'
 import { generateResetToken } from "@/lib/auth/tokens";
 import { sendPasswordResetEmail } from "@/lib/auth/email";
 
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json();
     
-    const user = await db.user.findUnique({
+    const user = await (await dbOperations.user()).findUnique({
       where: { email }
     });
 

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { dbOperations } from '@/lib/db'
-import { verifyResetToken } from "@/lib/auth/tokens";
+import { verifyToken } from "@/lib/auth/tokens";
 
 export async function POST(request: Request) {
   try {
     const { token, password } = await request.json();
     
-    const payload = await verifyResetToken(token);
+    const payload = await verifyToken(token);
     if (!payload) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
@@ -16,9 +16,8 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await hash(password, 12);
-    
-    await dbOperations.user.update({
-      where: { email: payload.email },
+    await (await dbOperations.user()).update({
+      where: { email: payload.email as string },
       data: { password: hashedPassword }
     });
 
