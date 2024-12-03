@@ -1,7 +1,6 @@
 import type { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
 import { UserRole } from "@/types";
 
 export const authConfig: AuthOptions = {
@@ -22,8 +21,8 @@ export const authConfig: AuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: 'SENDER' as UserRole,
-          emailVerified: true
+          role: "SENDER" as UserRole,
+          emailVerified: profile.email_verified
         };
       }
     }),
@@ -43,8 +42,7 @@ export const authConfig: AuthOptions = {
           id: "1",
           name: "Test User",
           email: credentials.email,
-          role: 'SENDER' as UserRole,
-          emailVerified: true
+          role: "SENDER" as UserRole
         };
 
         return user;

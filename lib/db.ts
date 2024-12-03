@@ -24,23 +24,6 @@ export async function getDb() {
       updatedAt INTEGER NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS accounts (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      type TEXT NOT NULL,
-      provider TEXT NOT NULL,
-      providerAccountId TEXT NOT NULL,
-      refresh_token TEXT,
-      access_token TEXT,
-      expires_at INTEGER,
-      token_type TEXT,
-      scope TEXT,
-      id_token TEXT,
-      session_state TEXT,
-      UNIQUE(provider, providerAccountId),
-      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
-    );
-
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       sessionToken TEXT UNIQUE NOT NULL,
@@ -61,35 +44,22 @@ export async function getDb() {
 }
 
 export const db = {
-  async get(query: string, params: any[] = []) {
-    const dbInstance = await getDb();
-    const result = await dbInstance.execO(query, params);
-    return result[0];
-  },
-
-  async all(query: string, params: any[] = []) {
-    const dbInstance = await getDb();
-    return dbInstance.execO(query, params);
-  },
-
-  async run(query: string, params: any[] = []) {
-    const dbInstance = await getDb();
-    return dbInstance.exec(query, params);
-  },
-
   async user() {
+    const dbInstance = await getDb();
+    
     return {
       async findUnique({ where }: { where: { email: string } }) {
-        return this.get(
+        const result = await dbInstance.execO(
           'SELECT * FROM users WHERE email = ?',
           [where.email]
         );
+        return result[0];
       },
 
       async create({ data }: { data: any }) {
         const id = nanoid();
         const now = Date.now();
-        await this.run(`
+        await dbInstance.exec(`
           INSERT INTO users (id, name, email, password, phone, role, emailVerified, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [id, data.name, data.email, data.password, data.phone, data.role, null, now, now]);
@@ -103,7 +73,7 @@ export const db = {
           .map(([key]) => `${key} = ?`)
           .join(', ');
         
-        await this.run(`
+        await dbInstance.exec(`
           UPDATE users 
           SET ${sets}, updatedAt = ?
           WHERE email = ?
