@@ -1,8 +1,8 @@
 import NextAuth from "next-auth";
-import { authConfig } from "./auth.config";
+import authOptions from "./auth.config";
 import { AUTH_ERRORS } from "@/lib/auth/constants";
 
-const handler = NextAuth(authConfig);
+const handler = NextAuth(authOptions);
 
 export async function GET(request: Request) {
   try {

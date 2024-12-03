@@ -1,78 +1,37 @@
-import type { AuthOptions } from "next-auth";
+import { NextAuthOptions } from 'next-auth';
+import { UserRole } from '@/types/auth';
 import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { UserRole } from "@/types";
 
-export const authConfig: AuthOptions = {
+export const authConfig: NextAuthOptions = {
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (session?.user) {
+        session.user.id = token.sub as string;
+        
+        // Safely assign the role with validation
+        const allowedRoles: UserRole[] = ['SENDER', 'TRAVELER'];
+        const role = allowedRoles.includes(token.role as UserRole)
+          ? (token.role as UserRole)
+          : 'SENDER'; // Fallback to default role
+
+        session.user.role = role;
+      }
+      return session;
+    },
+  },
+  // Add your authentication providers here
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "select_account",
-          access_type: "offline",
-          response_type: "code"
-        }
-      },
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          role: "SENDER" as UserRole,
-          emailVerified: profile.email_verified
-        };
-      }
     }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
-        }
-
-        // In a real app, fetch user from your database
-        const user = {
-          id: "1",
-          name: "Test User",
-          email: credentials.email,
-          role: "SENDER" as UserRole
-        };
-
-        return user;
-      }
-    })
   ],
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role as UserRole;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session?.user) {
-        session.user.id = token.sub!;
-        session.user.role = token.role as UserRole;
-      }
-      return session;
-    }
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
 };
+
+export default authConfig;
