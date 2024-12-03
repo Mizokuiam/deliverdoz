@@ -3,7 +3,6 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { UserRole } from "@/types";
-import { db } from "@/lib/db";
 
 export const authConfig: AuthOptions = {
   providers: [
@@ -39,33 +38,16 @@ export const authConfig: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const user = await db.get(
-          'SELECT * FROM users WHERE email = ?',
-          [credentials.email]
-        );
-
-        if (!user || !user.password) {
-          throw new Error("User not found");
-        }
-
-        if (!user.emailVerified) {
-          throw new Error("Please verify your email first");
-        }
-
-        const isValid = await compare(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error("Invalid password");
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role as UserRole,
+        // In a real app, fetch user from your database
+        const user = {
+          id: "1",
+          name: "Test User",
+          email: credentials.email,
+          role: 'SENDER' as UserRole,
           emailVerified: true
         };
+
+        return user;
       }
     })
   ],
@@ -75,16 +57,9 @@ export const authConfig: AuthOptions = {
     verifyRequest: '/auth/verify-request',
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        return true;
-      }
-      return !!user.emailVerified;
-    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role as UserRole;
-        token.emailVerified = user.emailVerified;
       }
       return token;
     },
@@ -92,7 +67,6 @@ export const authConfig: AuthOptions = {
       if (session?.user) {
         session.user.id = token.sub!;
         session.user.role = token.role as UserRole;
-        session.user.emailVerified = token.emailVerified as boolean;
       }
       return session;
     }
