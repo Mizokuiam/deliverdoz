@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import authOptions from "./auth.config";
 import { AUTH_ERRORS } from "@/lib/auth/constants";
+import { dbOperations } from '@/lib/db'
 
 const handler = NextAuth(authOptions);
 

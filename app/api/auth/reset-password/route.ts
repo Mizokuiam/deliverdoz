@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
-import { db } from "@/lib/db";
+import { dbOperations } from '@/lib/db'
 import { verifyResetToken } from "@/lib/auth/tokens";
 
 export async function POST(request: Request) {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const hashedPassword = await hash(password, 12);
     
-    await db.user.update({
+    await dbOperations.user.update({
       where: { email: payload.email },
       data: { password: hashedPassword }
     });

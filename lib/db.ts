@@ -1,16 +1,16 @@
-import { initDb } from '@vlcn.io/crsqlite-wasm';
+import initDb from '@vlcn.io/crsqlite-wasm';
 import { nanoid } from 'nanoid';
 
-let db: any = null;
+let dbInstance: any = null;
 
 export async function getDb() {
-  if (db) return db;
+  if (dbInstance) return dbInstance;
   
   const sqlite = await initDb();
-  db = await sqlite.open(':memory:');
+  dbInstance = await sqlite.open(':memory:');
 
   // Initialize tables
-  await db.exec(`
+  await dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -40,16 +40,16 @@ export async function getDb() {
     );
   `);
 
-  return db;
+  return dbInstance;
 }
 
-export const db = {
+export const dbOperations = {
   async user() {
-    const dbInstance = await getDb();
+    const db = await getDb();
     
     return {
       async findUnique({ where }: { where: { email: string } }) {
-        const result = await dbInstance.execO(
+        const result = await db.execO(
           'SELECT * FROM users WHERE email = ?',
           [where.email]
         );
@@ -59,7 +59,7 @@ export const db = {
       async create({ data }: { data: any }) {
         const id = nanoid();
         const now = Date.now();
-        await dbInstance.exec(`
+        await db.exec(`
           INSERT INTO users (id, name, email, password, phone, role, emailVerified, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [id, data.name, data.email, data.password, data.phone, data.role, null, now, now]);
@@ -73,7 +73,7 @@ export const db = {
           .map(([key]) => `${key} = ?`)
           .join(', ');
         
-        await dbInstance.exec(`
+        await db.exec(`
           UPDATE users 
           SET ${sets}, updatedAt = ?
           WHERE email = ?
