@@ -6,19 +6,16 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
     
-    // Allow public routes
-    if (["/", "/about", "/auth/signin", "/auth/signup", "/auth/forgot-password"].includes(path)) {
-      if (token) {
-        // Redirect authenticated users away from auth pages
-        if (path.startsWith("/auth/")) {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
-        return NextResponse.next();
+    // Public routes that don't require authentication
+    const publicRoutes = ["/", "/about", "/auth/signin", "/auth/signup", "/auth/forgot-password"];
+    if (publicRoutes.includes(path)) {
+      if (token && path.startsWith("/auth/")) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
       return NextResponse.next();
     }
 
-    // Require authentication for protected routes
+    // Protected routes that require authentication
     if (!token) {
       const callbackUrl = encodeURIComponent(path);
       return NextResponse.redirect(new URL(`/auth/signin?callbackUrl=${callbackUrl}`, req.url));

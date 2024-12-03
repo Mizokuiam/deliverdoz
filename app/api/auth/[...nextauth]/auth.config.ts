@@ -79,7 +79,6 @@ export const authConfig: AuthOptions = {
       if (account?.provider === "google") {
         return true;
       }
-
       return !!user.emailVerified;
     },
     async jwt({ token, user }) {
